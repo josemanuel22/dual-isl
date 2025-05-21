@@ -2,7 +2,6 @@ module StatisticalLoss
 
 using Flux
 using Zygote
-using ProgressMeter
 using Statistics
 using Distributions
 using StatsFuns: logistic
