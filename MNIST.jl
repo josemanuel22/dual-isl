@@ -72,7 +72,7 @@ noise_model = MvNormal(mean_vector, cov_matrix)
 	m::Int = 10 # Number of random directions
 	η::Float32 = 1e-2
 	τ::Float32 = 1e-2
-	epochs::Int = 10
+	epochs::Int = 100
 	samples::Int = 1000
 	latent_dim::Int = z_dim
 	noise_model::Distribution = noise_model
@@ -95,35 +95,10 @@ gen = gpu(Generator(latent_dim))
 Ks = [5, 10, 20]
 losses = StatisticalLoss.invariant_statistical_loss_multiscale_gpu(gen, loader, hparams, Ks)
 
-
-function plot_generated_mnist(gen; n::Int = 25, z_dim::Int, noise_model)
-	# 1) Sample latent vectors
-	Z = rand(noise_model, z_dim, n)
-	# If your generator is on the GPU, push Z to the same device:
-	try
-		Z = gpu(Z)
-	catch
-		# ignore if gen is on CPU
-	end
-
-	# 2) Generate images
-	imgs = gen(Z)              # should be 28×28×1×n
-	imgs = cpu(imgs)           # bring back to CPU if needed
-
-	# 3) Plot a sqrt(n)×sqrt(n) grid
-	s = Int(sqrt(n))
-	plt = plot(layout = (s, s), margin = 1mm, ticks = false)
-
-	for i in 1:n
-		# squeeze to 28×28
-		img = dropdims(imgs[:, :, 1, i]; dims = 3)
-		heatmap!(plt[i], img;
-			colorbar = false,
-			aspect_ratio = 1,
-			axis = false,
-			c = :grays,
-		)
-	end
-
-	display(plt)
-end
+#Plot the numbers#
+fixed_noise = [gpu(randn(Float32, hparams.latent_dim, 1)) for _ ∈ 1:9*9]
+fake_images = @. cpu(gen(fixed_noise))
+image_array = reduce(vcat, reduce.(hcat, partition(fake_images,9)))
+image_array = permutedims(dropdims(image_array; dims = (3, 4)), (2, 1))
+image_array = @. Gray(image_array + 1.0f0) / 2.0f0
+save("MNIST.pdf", image_array)
