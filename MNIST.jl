@@ -4,6 +4,7 @@ using Base.Iterators: partition
 using LinearAlgebra
 using Distributions
 using Flux
+using Images
 using Parameters: @with_kw
 include("StatisticalLoss.jl")
 
