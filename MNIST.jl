@@ -2,6 +2,8 @@ using CUDA
 using MLDatasets
 using Base.Iterators: partition
 using LinearAlgebra
+using Distributions
+using Flux
 using Parameters: @with_kw
 include("StatisticalLoss.jl")
 
@@ -98,7 +100,7 @@ losses = StatisticalLoss.invariant_statistical_loss_multiscale_gpu(gen, loader, 
 #Plot the numbers#
 fixed_noise = [gpu(randn(Float32, hparams.latent_dim, 1)) for _ ∈ 1:9*9]
 fake_images = @. cpu(gen(fixed_noise))
-image_array = reduce(vcat, reduce.(hcat, partition(fake_images,9)))
+image_array = reduce(vcat, reduce.(hcat, partition(fake_images, 9)))
 image_array = permutedims(dropdims(image_array; dims = (3, 4)), (2, 1))
 image_array = @. Gray(image_array + 1.0f0) / 2.0f0
 save("MNIST.pdf", image_array)
